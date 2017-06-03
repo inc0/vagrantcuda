@@ -1,0 +1,64 @@
+- hosts: all
+  gather_facts: no
+  become: true
+  environment:
+    CUDA_HOME: "/usr/local/cuda"
+    LD_LIBRARY_PATH: "/usr/local/cuda/lib64"
+    PATH: "{{ ansible_env.PATH }}:/usr/local/cuda/bin"
+  tasks:
+    - name: Install python2 for ansible
+      raw: "apt-get -y install python"
+
+    - setup:
+
+    - name: Check NVIDIA pci
+      shell: "lspci | grep -i nvidia"
+      register: nvidia_pci_id
+
+    - name: Download and install cuda repo and package
+      get_url:
+        url: "http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/cuda-repo-ubuntu1604_8.0.61-1_amd64.deb"
+        dest: "~/cuda-repo.deb"
+
+    - shell: "dpkg -i ~/cuda-repo.deb"
+
+    - apt:
+        name: "cuda"
+        update_cache: "yes"
+
+    - name: install cudnn
+      file:
+        path: "~/cudnn"
+        state: "directory"
+
+    - unarchive:
+        src: "cudnn-8.0-linux-x64-v5.1.tgz"
+        dest: "~/cudnn"
+
+    - shell: "cp -P ~/cudnn/cuda/include/cudnn.h /usr/include"
+
+    - shell: "cp -P ~/cudnn/cuda/lib64/libcudnn* /usr/local/cuda/lib64"
+
+    - name: Install python3 dev packages
+      apt:
+        name: "{{ item }}"
+      with_items:
+        - python3-pip
+        - python3-dev
+        - python-virtualenv
+
+    - name: install tensorflow-gpu
+      pip:
+        name: tensorflow-gpu
+        executable: pip3
+
+    - name: set default envs
+      lineinfile:
+        path: /etc/bash.bashrc
+        line: "export {{ item }}"
+      with_items:
+        - "CUDA_HOME=/usr/local/cuda"
+        - "LD_LIBRARY_PATH=/usr/local/cuda/lib64"
+
+    - name: reboot machine
+      shell: "reboot"

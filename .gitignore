@@ -1,0 +1,5 @@
+*.tgz
+*.log
+*.retry
+.vagrant
+*.swp
