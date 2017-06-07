@@ -3,11 +3,15 @@ Vagrant file and playbook to install ubuntu 16.04 vim + pci passthru nvidia gpu 
 
 ## How to use
 
-* Install vagrant, virtualbox and virtualbox extentions
+* Install vagrant, vagrant-libvirt and libvirt stack
 
 * Edit PCI device id in Vagrantfile
 ```
-vb.customize ["modifyvm", :id, "--chipset", "ich9", "--pciattach", "2:00.0@2:00.0"]
+    domain.pcis = [{
+        bus: 2,
+        slot: 0,
+        function: 0,
+    }]
 ```
 
 * Download cuDNN v5.1 for Linux (you need to create account there)
